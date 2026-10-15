@@ -72,6 +72,15 @@ Example: `today, tomorrow` shows the waste target only on collection day and the
 otherwise it disappears from the Smartspace entirely. While no value has been fetched yet, a
 target with a filter set stays hidden as well (no "Loading …").
 
+**Waste calendars with several dates:** sensors from
+[Waste Collection Schedule](https://github.com/mampfes/hacs_waste_collection_schedule) only name
+the *next* collection in their state — if there is one today *and* one tomorrow, one is missing.
+If the sensor provides its dates as attributes (`2026-10-16: Restmüll` and so on), the plugin
+therefore checks **each date separately** when a filter is set and shows all matching ones
+together, e.g. "Gelber Sack today · Restmüll tomorrow". "today", "tomorrow" and "in 3 days" follow
+the phone's language — so the filter has to match it (`today, tomorrow` in English,
+`Heute, Morgen` in German).
+
 ### Multiple sensors
 
 The target can be **added more than once** — each instance has its own URL, its own token and

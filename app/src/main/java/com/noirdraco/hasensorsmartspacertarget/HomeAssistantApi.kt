@@ -48,7 +48,8 @@ object HomeAssistantApi {
                         unit = attributes?.optString("unit_of_measurement").orEmpty(),
                         icon = attributes?.optString("icon").orEmpty(),
                         deviceClass = attributes?.optString("device_class").orEmpty(),
-                        timestamp = System.currentTimeMillis()
+                        timestamp = System.currentTimeMillis(),
+                        appointments = Appointments.fromAttributes(stringAttributes(attributes))
                     )
                 )
             }
@@ -56,5 +57,13 @@ object HomeAssistantApi {
             // u.a. Timeout, kein Netz, DNS, blockierter Klartext-Traffic, JSON-Parsefehler
             FetchResult.NetworkError(e.message ?: e.javaClass.simpleName)
         }
+    }
+
+    /** Alle Attribute mit Text-Wert (Listen, Zahlen usw. bleiben außen vor). */
+    private fun stringAttributes(attributes: JSONObject?): Map<String, String> {
+        if (attributes == null) return emptyMap()
+        return attributes.keys().asSequence()
+            .mapNotNull { key -> (attributes.opt(key) as? String)?.let { key to it } }
+            .toMap()
     }
 }

@@ -13,6 +13,7 @@ import com.kieronquinn.app.smartspacer.sdk.model.uitemplatedata.TapAction
 import com.kieronquinn.app.smartspacer.sdk.model.uitemplatedata.Text
 import com.kieronquinn.app.smartspacer.sdk.provider.SmartspacerTargetProvider
 import com.kieronquinn.app.smartspacer.sdk.utils.TargetTemplate
+import java.time.LocalDate
 import android.graphics.drawable.Icon as AndroidIcon
 
 class HomeAssistantTarget : SmartspacerTargetProvider() {
@@ -31,8 +32,18 @@ class HomeAssistantTarget : SmartspacerTargetProvider() {
         // eine leere Liste blendet es im Smartspace komplett aus. Solange noch kein Wert im Cache
         // liegt, wird ebenfalls nichts angezeigt: Der Platzhalter „Lädt …“ wäre sonst ein Treffer,
         // den der Nutzer mit dem Filter ja gerade ausschließen wollte.
+        // Liefert der Sensor Termine (Waste Collection Schedule), prüft der Filter jeden Termin
+        // einzeln statt des States — der nennt nur die nächste Abholung, bei „heute und morgen“
+        // ginge sonst ein Termin verloren. Angezeigt werden dann alle passenden Termine.
+        var appointmentTexts: List<String>? = null
         if (settings != null && ShowRule.isSet(settings.showOnlyIf)) {
-            if (value == null || !ShowRule.matches(value.state, settings.showOnlyIf)) {
+            if (value == null) return emptyList()
+            if (value.appointments.isNotEmpty()) {
+                appointmentTexts = Appointments.texts(
+                    value.appointments, LocalDate.now(), settings.showOnlyIf
+                ) { days -> dayText(context, days) }
+                if (appointmentTexts.isEmpty()) return emptyList()
+            } else if (!ShowRule.matches(value.state, settings.showOnlyIf)) {
                 return emptyList()
             }
         }
@@ -42,7 +53,9 @@ class HomeAssistantTarget : SmartspacerTargetProvider() {
         val iconRes: Int
         if (value != null) {
             title = value.friendlyName
-            subtitle = if (isUnavailable(value.state)) {
+            subtitle = if (appointmentTexts != null) {
+                appointmentTexts.joinToString(" · ")
+            } else if (isUnavailable(value.state)) {
                 context.getString(R.string.target_unavailable)
             } else {
                 listOf(value.state, value.unit)
@@ -119,6 +132,15 @@ class HomeAssistantTarget : SmartspacerTargetProvider() {
             HomeAssistantPrefs.cancelHeartbeat(context)
         }
         HomeAssistantPrefs.clear(context, smartspacerId)
+    }
+
+    // Abstand eines Termins in Tagen → „Heute“ / „Morgen“ / „in 3 Tagen“
+    private fun dayText(context: Context, days: Long): String = when (days) {
+        0L -> context.getString(R.string.appointment_today)
+        1L -> context.getString(R.string.appointment_tomorrow)
+        else -> context.resources.getQuantityString(
+            R.plurals.appointment_in_days, days.toInt(), days.toInt()
+        )
     }
 
     private fun isUnavailable(state: String): Boolean =

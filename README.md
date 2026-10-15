@@ -76,6 +76,15 @@ Beispiel: `Heute, Morgen` blendet das Abfall-Target nur am Abholtag und am Tag d
 verschwindet es komplett aus dem Smartspace. Solange noch kein Wert abgerufen wurde, bleibt das
 Target bei gesetztem Filter ebenfalls ausgeblendet (kein „Lädt …").
 
+**Abfallkalender mit mehreren Terminen:** Sensoren von
+[Waste Collection Schedule](https://github.com/mampfes/hacs_waste_collection_schedule) nennen im
+Zustand immer nur die *nächste* Abholung — sind heute *und* morgen Termine, fehlt einer. Liefert
+der Sensor seine Termine als Attribute (`2026-10-16: Restmüll` usw.), prüft das Plugin bei
+gesetztem Filter deshalb **jeden Termin einzeln** und zeigt alle passenden zusammen an, z. B.
+„Gelber Sack Heute · Restmüll Morgen". „Heute", „Morgen" und „in 3 Tagen" kommen dabei in der
+Sprache des Handys — der Filter muss also zur Handysprache passen (`Heute, Morgen` auf Deutsch,
+`today, tomorrow` auf Englisch).
+
 ### Mehrere Sensoren
 
 Das Target kann **mehrfach hinzugefügt** werden — jede Instanz hat ihre eigene URL, ihren

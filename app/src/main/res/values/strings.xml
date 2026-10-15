@@ -4,6 +4,12 @@
     <string name="target_description">Zeigt einen Home Assistant Sensorwert</string>
     <string name="target_loading">Lädt …</string>
     <string name="target_unavailable">Nicht verfügbar</string>
+    <string name="appointment_today">Heute</string>
+    <string name="appointment_tomorrow">Morgen</string>
+    <plurals name="appointment_in_days">
+        <item quantity="one">in %d Tag</item>
+        <item quantity="other">in %d Tagen</item>
+    </plurals>
     <string name="setup_title">Home Assistant Sensor einrichten</string>
     <string name="setup_base_url_label">Home Assistant Base-URL</string>
     <string name="setup_base_url_hint">https://homeassistant.local:8123</string>

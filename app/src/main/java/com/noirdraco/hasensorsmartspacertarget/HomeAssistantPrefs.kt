@@ -17,7 +17,9 @@ import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
 import androidx.work.workDataOf
+import org.json.JSONArray
 import org.json.JSONObject
+import java.time.LocalDate
 import java.util.concurrent.TimeUnit
 
 data class SensorSettings(
@@ -38,7 +40,10 @@ data class SensorValue(
     val icon: String,
     // HA-Attribut "device_class", z. B. "temperature" — Zweitquelle fürs Icon
     val deviceClass: String,
-    val timestamp: Long
+    val timestamp: Long,
+    // Termine aus Datum-Attributen (Waste Collection Schedule), leer bei normalen Sensoren.
+    // Siehe [Appointments].
+    val appointments: List<Appointment> = emptyList()
 )
 
 /**
@@ -113,6 +118,11 @@ object HomeAssistantPrefs {
             .put("icon", value.icon)
             .put("deviceClass", value.deviceClass)
             .put("timestamp", value.timestamp)
+            .put("appointments", JSONArray().apply {
+                value.appointments.forEach {
+                    put(JSONObject().put("date", it.date.toString()).put("label", it.label))
+                }
+            })
         prefs(context).edit { putString(KEY_LAST_VALUE_PREFIX + smartspacerId, json.toString()) }
     }
 
@@ -126,9 +136,21 @@ object HomeAssistantPrefs {
                 unit = json.optString("unit"),
                 icon = json.optString("icon"),
                 deviceClass = json.optString("deviceClass"),
-                timestamp = json.getLong("timestamp")
+                timestamp = json.getLong("timestamp"),
+                // optJSONArray: Werte, die vor den Terminen gespeichert wurden, haben das Feld nicht
+                appointments = loadAppointments(json.optJSONArray("appointments"))
             )
         }.getOrNull()
+    }
+
+    private fun loadAppointments(array: JSONArray?): List<Appointment> {
+        if (array == null) return emptyList()
+        return (0 until array.length()).mapNotNull { i ->
+            val item = array.optJSONObject(i) ?: return@mapNotNull null
+            runCatching {
+                Appointment(LocalDate.parse(item.getString("date")), item.getString("label"))
+            }.getOrNull()
+        }
     }
 
     fun clear(context: Context, smartspacerId: String) {
